@@ -1,16 +1,38 @@
 import axios from 'axios';
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify';
 
 export const Signup = () => {
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
   const submitHandler = async (data) => {
-    data.roleId = "67c138b76acafdcf94ed4b2b";
-    const res = await axios.post('/user', data);
-    toast(res.data.message);
-    console.log(res.data);
+    // data.roleId = "67c138b76acafdcf94ed4b2b";
+    try {
+      const res = await axios.post('/user', data);
+      toast(res.data.message);
+      navigate('/login');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error?.response?.data?.error.includes("duplicate")) {
+          if (error?.response?.data?.error.includes("username")) {
+            toast('User already exists with given username')
+          } else if (error?.response?.data?.error.includes("email")) {
+            toast('User already exists with given email')
+          } else {
+            toast('User already exists')
+          }
+        } else {
+          const errorMessage = error.response?.data?.message || error.message;
+          toast(`Error: ${errorMessage}`, { position: "top-right" });
+          console.log(error?.response?.data?.error);
+          console.log(error?.response);
+        }
+      } else {
+        toast.error("An unexpected error occured", { position: "top-right" });
+      }
+    }
   }
 
   return (
@@ -90,7 +112,7 @@ export const Signup = () => {
                     aria-describedby="inputGroupPrepend"
                     required={true}
                     {...register('username')}
-                    />
+                  />
                   <div className="invalid-feedback">Please choose a username.</div>
                 </div>
               </div>

@@ -1,15 +1,33 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import React from 'react'
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify';
 
 export const Login = () => {
-  const {register, handleSubmit} = useForm();
+  const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
   const submitHandler = async (data) => {
-    const res = await axios.post('/user/login', data);
-    toast(res.data.message);
-    console.log(res);
+    try {
+      const res = await axios.post('/user/login', data);
+      toast(res.data.message);
+      console.log(res);
+      localStorage.setItem('id', res.data.data._id);
+      localStorage.setItem('role', res.data.data.roleId.role);
+      if(res.data.data.roleId.role === "User"){ 
+        navigate('/user');
+      }else{
+        // alert("Login Failed");
+        toast("Login Failed");
+      }
+    } catch (error) {
+      if (isAxiosError) {
+        const errorMessage = error.response?.data?.message || error.message;
+        toast(`Error: ${errorMessage}`);
+      } else {
+        toast(`An unexpected error has occured`);
+      }
+    }
   }
 
   return (
